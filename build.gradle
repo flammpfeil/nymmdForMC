@@ -1,0 +1,75 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.2-SNAPSHOT'
+    }
+}
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'maven'
+
+version = "mc1.10.2-r3"
+group= "flammpfeil.nymmd"
+archivesBaseName = "nymmd-custom"
+
+minecraft {
+    version = "1.10.2-12.18.1.2095"
+    runDir = "run"
+    
+    mappings = "snapshot_20160518"
+    
+    //static final boolean isRelease = /*@IS_RELEASE@*/ false;
+    replace '@IS_RELEASE@', '*/true;//'
+
+    replace '@VERSION@', project.version
+    replace '@MC_VERSION@', version
+}
+processResources
+{
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':project.minecraft.version, 'modname':project.archivesBaseName, 'modid':project.group
+    }
+
+    // copy everything else, thats not the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+dependencies {
+    runtime fileTree(dir: 'libs', include: '*.jar')
+}
+
+def defaultEncoding = 'UTF-8'
+tasks.withType(AbstractCompile) each {
+    it.options.encoding = defaultEncoding
+    it.options.compilerArgs += ['-source', '1.6', '-target', '1.6']
+}
+
+compileTestJava {
+    options.encoding = defaultEncoding
+    options.compilerArgs += ['-source', '1.6', '-target', '1.6']
+}
+
+
+jar {
+    manifest {
+        //attributes 'FMLCorePlugin': 'mods.flammpfeil.containerfix.asm.CorePlugin'
+        //attributes 'FMLCorePluginContainsFMLMod': true
+    }
+    from {
+        configurations.provided.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}
+
